@@ -1,70 +1,52 @@
 import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
-import loginService from './services/login'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import BlogForm from './components/BlogForm'
-
+import { useDispatch, useSelector } from 'react-redux'
+import { initializeBlogs, likeBlog, createBlog, deleteBlog } from './reducers/blogReducer'
+import { logged, login, logout } from './reducers/userReducer'
+import { newNote } from './reducers/noteReducer'
 const App = () => {
   const blogFormRef = React.createRef()
-
-  const [blogs, setBlogs] = useState([])
+  const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
-  const [message, setMessage] = useState(null)
+  const message = useSelector(({notification}) => notification)
+  const user = useSelector(({user})=> user)
+  const blogs = useSelector (({blogs}) => blogs)
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs( blogs )
-    )  
-  }, [])
+    console.log('effect runs')
+    dispatch(initializeBlogs())
+  }, [dispatch])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    if(loggedUserJSON) {
-      const cuser = JSON.parse(loggedUserJSON)
-      setUser(cuser)
-      blogService.setToken(cuser.token)
-    }
-  }, [])
+    dispatch(logged(JSON.parse(loggedUserJSON)))
+  }, [dispatch])
 
   const handleLogin = async (event) => {
     event.preventDefault()
     try{
-      const tryLogin = await loginService.login({
-        username, password
-      })
-      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(tryLogin))
-      setUser(tryLogin)
+      dispatch(login(username, password))
       setUsername('')
       setPassword('')
       
     } catch (exception) {
       console.log('wrong creds!')
-      setMessage(
-          `Login failed, check credentials`
-      )
-      setTimeout(() => setMessage(null), 5000)
+      dispatch(newNote('Login failed, check credentials'))
     }
   }
   const handleLogout = () => {
-    window.localStorage.removeItem('loggedBlogappUser')
-    setUser(null)
+    dispatch(logout())
   }
 
   const handleCreate = async (blogObject) => {    
     try{
-      blogService.setToken(user.token)
-      const response = await blogService.addNewBlog(
-        blogObject
-      )
-      console.log(response)
-      setBlogs(blogs.concat(response))
-      setMessage(`${response.title} by ${response.author}`)
-      setTimeout(() => setMessage(null), 5000)
-
+      dispatch(createBlog(blogObject))
+      dispatch(newNote(`${blogObject.title} by ${blogObject.author}`))
       blogFormRef.current.toggleVisibility()
     } catch (exception) {
       console.log('error creating blog: ', exception)
@@ -74,8 +56,7 @@ const App = () => {
   const handleDelete = async (blogObject) => {
     try{
       if (window.confirm(`Are you sure you want to delete ${blogObject.title} by ${blogObject.author}`)){
-        await blogService.deleteBlog(blogObject)
-        setBlogs(blogs.filter(blog => blog.id !== blogObject.id ))
+        dispatch(deleteBlog(blogObject))
       }
 
     } catch (exception) {
@@ -84,11 +65,7 @@ const App = () => {
   }
   const handleLike = async (blogObject) => {
     try{
-      setBlogs(
-        blogs.map(blog => blog.id === blogObject.id ? {...blog, likes: blog.likes+1} : blog)
-      )
-      
-      await blogService.modifyLikes(blogObject)
+      dispatch(likeBlog(blogObject))
       
       //find changed blog
       // use set blog to change the blog
