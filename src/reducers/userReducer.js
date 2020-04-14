@@ -4,7 +4,6 @@ import blogService from '../services/blogs'
 const userReducer = (state =[], action) => {
     switch(action.type){
         case 'LOGGED':
-            console.log(action.data)
             return action.data
         case 'LOGIN':
             return action.data

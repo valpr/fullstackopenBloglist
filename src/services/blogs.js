@@ -21,6 +21,7 @@ const addNewBlog = async (newBlog) =>{
 }
 
 const modifyLikes = async (newBlog) => {
+  
   const config = {
     headers: {Authorization: token}
   }
@@ -38,4 +39,12 @@ const deleteBlog = async (deadBlog) => {
   return response.data
 }
 
-export default { getAll, setToken, addNewBlog, modifyLikes, deleteBlog }
+const commentBlog = async (newBlog) => {
+  const modUrl = `${baseUrl}/${newBlog.id}/comments`
+  const response = await axios.post(modUrl, {...newBlog, user: newBlog.user.id })
+  return response.data
+}
+
+
+
+export default { commentBlog, getAll, setToken, addNewBlog, modifyLikes, deleteBlog }
