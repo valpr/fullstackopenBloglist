@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import {useParams} from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { comment } from '../reducers/blogReducer'
+import { Card, Button, TextField, List, ListItem } from '@material-ui/core'
 
 const DetailedBlogView = ({blogs, handleLike}) => {
     const dispatch = useDispatch()
@@ -23,19 +24,19 @@ const DetailedBlogView = ({blogs, handleLike}) => {
         setNewComment('')
     }
     return (
-        <div>
+        <Card>
             <h2>{blogToChoose.title}</h2>
             <a href={`http://${blogToChoose.url}`}>{blogToChoose.url}</a> <br/>
-            {blogToChoose.likes} <button onClick={pressLike}>like</button> <br/>
+             <Button onClick={pressLike}>Like: {blogToChoose.likes} likes</Button> <br/>
             Added by {blogToChoose.user.name}
 
             <h3>Comments</h3>
-            <input onChange={(e)=> setNewComment(e.target.value)} value={newComment} name="comments" type="text" id="comments"/>
-            <button onClick={handleComment}>add comment</button>
-            <ul>
-                {blogToChoose.comments.map((comment, index) => <li key={index}>{comment}</li>)}
-            </ul>
-        </div>
+            <TextField onChange={(e)=> setNewComment(e.target.value)} value={newComment} name="comments" type="text" id="comments"/>
+            <Button onClick={handleComment}>add comment</Button>
+            <List>
+                {blogToChoose.comments.map((comment, index) => <ListItem key={index}>{comment}</ListItem>)}
+            </List>
+        </Card>
     )
 }
 

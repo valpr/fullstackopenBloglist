@@ -9,14 +9,20 @@ import { useDispatch, useSelector } from 'react-redux'
 import { initializeBlogs, likeBlog, createBlog, deleteBlog } from './reducers/blogReducer'
 import { logged, login, logout } from './reducers/userReducer'
 import { newNote } from './reducers/noteReducer'
-import { Switch, Route, Link } from 'react-router-dom'
+import { Redirect, Switch, Route, Link } from 'react-router-dom'
 import userService from './services/users'
+import { useField } from './hooks/useField'
+
+import { AppBar, Toolbar, IconButton, Typography, 
+  Table, TableContainer, TableRow, TableCell, 
+  TableBody, TextField, Button } from '@material-ui/core'
+
 
 const App = () => {
   const blogFormRef = React.createRef()
   const dispatch = useDispatch()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const username = useField('text')
+  const password = useField('password')
   const message = useSelector(({notification}) => notification)
   const user = useSelector(({user})=> user)
   const blogs = useSelector (({blogs}) => blogs)
@@ -43,11 +49,10 @@ const App = () => {
   const handleLogin = async (event) => {
     event.preventDefault()
     try{
-      dispatch(login(username, password))
-      setUsername('')
-      setPassword('')
+      dispatch(login(username.forField.value, password.forField.value))
+      username.reset()
+      password.reset()
     } catch (exception) {
-      console.log('wrong creds!')
       dispatch(newNote('Login failed, check credentials'))
     }
   }
@@ -92,18 +97,16 @@ const App = () => {
         <Notification message={message} />
 
         <div>
-          username
-          <input id="username" type="text"
-          name="username" value={username} onChange={({target}) => setUsername(target.value)}
-          ></input>
+          <TextField autoComplete="username" key="username" id="username" label="Username"
+          name="username" {...username.forField}
+          ></TextField>
         </div>
         <div>
-          password
-          <input id="password" name="password"
-          type="password" value={password} onChange={({target}) => setPassword(target.value)}
-          ></input>
+          <TextField autoComplete="current-password" key="password" label="Password" id="password" name="password"
+          {...password.forField}
+          ></TextField>
         </div>
-        <button id="login-button" type="submit">Login</button>
+        <Button id="login-button" type="submit">Login</Button>
       </div>
     </form>
   )
@@ -121,78 +124,87 @@ const App = () => {
       )}
     </div>
   )
-  const loggedIn = () => {
-    return (
-      <div>
-      <h2>Blogs</h2>
-      <Notification message={message} />
-      <p>{user.name} logged in</p> 
-      <button onClick={handleLogout}>Logout</button>
-      </div>
-    )
-  }
 
   const userView = () => { //iterate through blogs, add to user
     return (
       <div>
         <h3> Users</h3>
-        <table>
-        <tbody>
-
-        <tr>
-            <th>
+        <TableContainer>
+        <Table>
+        <TableBody>
+        <TableRow>
+            <TableCell>
               Name
-            </th>
-              <th>
+            </TableCell>
+              <TableCell>
                 Blogs Created
-              </th>
-            </tr>
+              </TableCell>
+            </TableRow>
           {userList.map((user) => {
-            return <tr key={user.id}>
-                      <td>
+            return <TableRow key={user.id}>
+                      <TableCell>
                         <Link to={`/users/${user.id}`}>{user.name}</Link>
-                      </td>
-                      <td>
+                      </TableCell>
+                      <TableCell>
                         {user.blogs.length}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
           })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
+        </TableContainer>
       </div>
     )
   }
 
 
   const Menu = () => { // users, users id, normal view of app, blogs view, navigation menu
-    const padding = {
-      paddingRight:5
-    }
     return (
-      <div>
-        <Link></Link>
+      <AppBar color='secondary' position="static">
+        <Toolbar>
+        <IconButton edge="start" color="inherit" aria-label="menu">
+    </IconButton>
+    <Button component={Link} to="/blogs/" color="inherit">
+      BLOGS
+    </Button>
+    <Button component={Link} to="/users/" color="inherit">
+      USERS
+    </Button>
 
-      </div>
+    {user ? <Button  onClick={handleLogout}>Logout</Button> : null}
+    <Typography  align="right" color="inherit" variant="h5">
+    {user ?  `Welcome, ${user.name}` : 'Please login'}
+    </Typography>
+        </Toolbar>
+      </AppBar>
+
     )
   }
 
   return (
     <div>
-      {user === null ? loginForm() : loggedIn()}
+    <Menu/> 
+    {user === null ? loginForm() : null}
+ 
 
     <Switch>
       <Route path="/users/:id">
         <DetailedUserView userList={userList}/>
       </Route>
       <Route path="/users">
-        {userView()}
+        {userView() }
       </Route>
       <Route path="/blogs/:id">
         <DetailedBlogView handleLike={handleLike} blogs={blogs}/>
       </Route>
       <Route path="/blogs">
-      {user === null ? null : blogForm()}
+      {blogForm()}
       </Route>
+      <Route path="/login" 
+      render ={() => user ? null : <Redirect to="/blogs"/>} />
+      <Route path="/" 
+      render ={() => user ? <Redirect to="/blogs"/> : <Redirect to="/login"/>} />
+
     </Switch>
     </div>
   )

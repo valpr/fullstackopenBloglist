@@ -1,37 +1,40 @@
-import React, {useState} from 'react'
+import React from 'react'
+import { useField } from '../hooks/useField'
+import { TextField, Button } from '@material-ui/core'
+
 const BlogForm = ({handleCreate}) => {
-    const [title, setTitle] = useState('')
-    const [author, setAuthor] = useState('')
-    const [url, setUrl] = useState('')
+    const title = useField('text')
+    const author = useField('text')
+    const url = useField('text')
 
     const addBlog = (event) => {
         event.preventDefault()
         handleCreate({
-            title: title,
-            author: author,
-            url: url,
+            title: title.forField.value,
+            author: author.forField.value,
+            url: url.forField.value,
         })
-        setTitle('')
-        setAuthor('')
-        setUrl('')
+        title.reset()
+        author.reset()        
+        url.reset()
     }
     return (
     <form onSubmit={addBlog}>
-      <h2>create new blog</h2>
+      <h2>Add a new blog!</h2>
 
         <div>
-          title:
-          <input id="title" name="title" type="text" value={title} onChange={({target}) => setTitle(target.value)} ></input>
+          
+          <TextField label="Enter title" id="title" name="title" {...title.forField} ></TextField>
         </div>
         <div>
-          author:
-          <input id="author" name="author" type="text" value={author} onChange={({target}) => setAuthor(target.value)} ></input>
+          
+          <TextField label="Enter author" id="author" name="author" {...author.forField} ></TextField>
         </div>
         <div>
-          URL:
-          <input id="url" name="url" type="text" value={url} onChange={({target}) => setUrl(target.value)} ></input>
+          
+          <TextField label="URL" id="url" name="url" {...url.forField} ></TextField>
         </div>
-        <button id="newBlog" type="submit">Submit a new blog!</button>
+        <Button id="newBlog" type="submit">Submit a new blog!</Button>
       </form>
     )
 }
